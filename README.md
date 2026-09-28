@@ -84,3 +84,41 @@ upstairs_hdmi_switch_host: "192.168.1.10"
 ## License
 
 This project is licensed under MIT license. See [LICENSE](LICENSE) file for details.
+
+
+## Matrix routing (added functionality)
+
+For matrix models (4x4 / 8x8 / 16x16) with the V2 control-panel protocol, this fork
+adds a `select` platform that gives you **one dropdown entity per output**, each
+listing your named inputs — so "input X to output Y" routing works directly from
+the dashboard, with state polled from the device.
+
+```yaml
+select:
+  - platform: tesmart_lan
+    matrixes:
+      hdmi_matrix:
+        friendly_name: HDMI Matrix
+        host: !secret hdmi_matrix_host
+        port: 5000
+        poll_interval: 30
+        inputs:
+          1: Xbox One
+          2: PS5
+          3: Mini PC
+          4: Camera Feed
+        outputs:
+          1: Beamer Leinwand
+          2: TV Wohnzimmer
+          3: Monitor Schreibtisch
+          4: TV Kueche
+```
+
+Each entry in `inputs` / `outputs` is `PORT: Name` or just `PORT` (then defaults to
+`HDMI N` / `Output N`). Ports are 1-16, so this also covers 4x4 and 16x16 models.
+
+- Sends `MT00SW <in><out>NT` (ASCII) over TCP for each selection.
+- Polls `MT00RD0000NT` every `poll_interval` seconds (set 0 to disable) and parses
+  `LINK:O<out>I<in>;END` replies, so states stay correct even when routing changes
+  via the front panel or another controller.
+- Existing `media_player` platform for switches/KVMs is unchanged.
