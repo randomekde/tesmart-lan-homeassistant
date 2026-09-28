@@ -122,3 +122,59 @@ Each entry in `inputs` / `outputs` is `PORT: Name` or just `PORT` (then defaults
   `LINK:O<out>I<in>;END` replies, so states stay correct even when routing changes
   via the front panel or another controller.
 - Existing `media_player` platform for switches/KVMs is unchanged.
+
+
+## Dashboard examples
+
+The `select` entities are usable directly in an Entities card with zero extra setup:
+
+```yaml
+type: entities
+title: HDMI Matrix
+entities:
+  - entity: select.hdmi_matrix_beamer_leinwand
+    name: Beamer Leinwand
+  - entity: select.hdmi_matrix_tv_wohnzimmer
+    name: TV Wohnzimmer
+  - entity: select.hdmi_matrix_monitor_schreibtisch
+    name: Monitor Schreibtisch
+  - entity: select.hdmi_matrix_tv_kueche
+    name: TV Kueche
+```
+
+### Button grid with live highlight (requires HACS `button-card`)
+
+An integration cannot ship dashboard cards, so for a button grid install the
+[button-card](https://github.com/custom-cards/button-card) custom card via HACS first.
+Then use a template that highlights the currently-routed input of each output:
+
+```yaml
+type: custom:button-card
+custom_fields:
+  grid:
+    card:
+      type: grid
+      columns: 4
+      square: false
+      cards:
+        - type: custom:button-card
+          name: Beamer
+          tap_action:
+            action: call-service
+            service: select.select_option
+            target:
+              entity_id: select.hdmi_matrix_beamer_leinwand
+            data:
+              option: Xbox One
+          state:
+            - value: Xbox One
+              styles:
+                card:
+                  - border: 2px solid var(--accent-color)
+          entity: select.hdmi_matrix_beamer_leinwand
+        # ... repeat per input x output
+```
+
+Generate one such block per (output, input) pair; the `state:` clause reads the
+select entity's current option, so the matching button gets the highlight border
+and stays correct even when routing is changed from the physical panel.
