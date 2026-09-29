@@ -178,3 +178,20 @@ custom_fields:
 Generate one such block per (output, input) pair; the `state:` clause reads the
 select entity's current option, so the matching button gets the highlight border
 and stays correct even when routing is changed from the physical panel.
+
+
+## Where to find the controls in Home Assistant
+
+After adding the `select:` config and restarting:
+
+1. **Any dashboard**: Edit dashboard -> Add card -> **Entities** (or "By Entity").
+   Search for your output names ("Beamer Leinwand", ...) or filter by
+   `select.` entities. Drag in the 8 output selects. Done — this is the
+   everyday place to use them.
+2. **By device**: Settings -> Devices & Services -> TESMart Lan -> the
+   "HDMI Matrix" device card -> click it. All entities of the matrix
+   (media_player + selects) are listed there with their states.
+3. **Global search**: press `e` anywhere in HA, type an output name, and
+   change the routing right from the search results.
+4. Developer Tools -> States: verify the select entities exist and their
+   current option matches the matrix.
