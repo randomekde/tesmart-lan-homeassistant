@@ -68,11 +68,17 @@ MATRIX_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=5000): cv.positive_int,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-        vol.Required(CONF_INPUTS): vol.All(
-            cv.ensure_list, [vol.Coerce(str)]
+        vol.Required(CONF_INPUTS): vol.Any(
+            vol.Schema(  # 1: Xbox One
+                {vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_PORTS)): cv.string}
+            ),
+            vol.All(cv.ensure_list, [cv.string]),  # "1: Xbox One"
         ),
-        vol.Required(CONF_OUTPUTS): vol.All(
-            cv.ensure_list, [vol.Coerce(str)]
+        vol.Required(CONF_OUTPUTS): vol.Any(
+            vol.Schema(
+                {vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_PORTS)): cv.string}
+            ),
+            vol.All(cv.ensure_list, [cv.string]),
         ),
         vol.Optional(CONF_POLL_INTERVAL, default=30): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=3600)
@@ -97,9 +103,14 @@ def _port_str(value):
 
 
 def _parse_ports(config, key, what):
-    """Turn a list of ints/strings into {port_int: friendly_name}."""
+    """Turn a dict {port: name} or a list of "port: name" strings into {port_int: name}."""
     mapping = {}
-    for entry in config[key]:
+    raw = config[key]
+    if isinstance(raw, dict):
+        for port, name in raw.items():
+            mapping[int(_port_str(port))] = str(name).strip()
+        return mapping
+    for entry in raw:
         entry = str(entry).strip()
         if ":" in entry:
             port, name = entry.split(":", 1)
